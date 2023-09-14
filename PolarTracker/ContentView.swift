@@ -21,6 +21,10 @@ struct ContentView: View {
                     .font(.title3)
                     .padding()
                 
+                Text("Location: \(bleManager.locationData)")
+                    .font(.title3)
+                    .padding()
+                
                 List(bleManager.discoveredPeripherals, id: \.self) { peripheral in
                     Button(action: {
                         bleManager.connect(to: peripheral)
@@ -29,6 +33,9 @@ struct ContentView: View {
                     }
                 }
                 .padding()
+                Text("GPS Clock: \(bleManager.hourData)")
+                    .font(.title.bold())
+                    .padding()
                 
                 Button("Scan for BLE Devices") {
                     bleManager.startBLEConnection()
@@ -36,6 +43,6 @@ struct ContentView: View {
                 .padding()
             }
             .navigationBarTitle("BLE Device List")
+            }
         }
     }
-}

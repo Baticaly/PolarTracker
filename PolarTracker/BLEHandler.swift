@@ -12,8 +12,15 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var characteristicValue = "No data"
     @Published var discoveredPeripherals: [CBPeripheral] = []
     @Published var isConnected = false
+    
+    @Published var hourData = "N/A"
+    @Published var locationData = "N/A"
+    @Published var gpsData = "N/A"
+    
     private var centralManager: CBCentralManager!
     private var peripheral: CBPeripheral?
+    
+    let dataHandler = DataHandling()
     
     override init() {
         super.init()
@@ -88,6 +95,28 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             if let value = String(data: data, encoding: .utf8) {
                 DispatchQueue.main.async {
                     self.characteristicValue = value
+                    self.dataHandler.parseAndProcessValue(value)
+                    
+                    // Parse Message to components
+                    if let jsonData = value.data(using: .utf8) {
+                        do {
+                            let messageData = try JSONDecoder().decode(MessageData.self, from: jsonData)
+                            
+                            let parsedHourData = self.dataHandler.extractHourData(from: messageData.message)
+                            let parsedLocationData = self.dataHandler.extractLocationData(from: messageData.message)
+                            let parsedMiscData = self.dataHandler.extractMiscData(from: messageData.message)
+                            
+                            DispatchQueue.main.async {
+                                self.hourData = parsedHourData
+                                self.locationData = parsedLocationData
+                                self.gpsData = parsedMiscData
+                            }
+                        } catch {
+                            print("Error decoding JSON data: \(error)")
+                        }
+                    }
+                    
+                    
                 }
             }
         }
