@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct PolarTrackerApp: App {
+struct BluetoothReaderApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

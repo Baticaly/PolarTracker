@@ -8,19 +8,34 @@
 import SwiftUI
 
 struct ContentView: View {
+    @ObservedObject var bleManager = BLEManager()
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        NavigationView {
+            VStack {
+                Text("Connected Status: \(bleManager.isConnected ? "Connected" : "Disconnected")")
+                    .font(.title3)
+                    .padding()
+                
+                Text("Characteristic Value: \(bleManager.characteristicValue)")
+                    .font(.title3)
+                    .padding()
+                
+                List(bleManager.discoveredPeripherals, id: \.self) { peripheral in
+                    Button(action: {
+                        bleManager.connect(to: peripheral)
+                    }) {
+                        Text(peripheral.name ?? "Unnamed")
+                    }
+                }
+                .padding()
+                
+                Button("Scan for BLE Devices") {
+                    bleManager.startBLEConnection()
+                }
+                .padding()
+            }
+            .navigationBarTitle("BLE Device List")
         }
-        .padding()
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
     }
 }
