@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreBluetooth
+import MapKit
 
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     @Published var characteristicValue = "No data"
@@ -14,8 +15,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var isConnected = false
     
     @Published var hourData = "N/A"
-    @Published var locationData = "N/A"
     @Published var gpsData = "N/A"
+    @Published var locationData = CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
     
     private var centralManager: CBCentralManager!
     private var peripheral: CBPeripheral?
@@ -103,14 +104,22 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                             let messageData = try JSONDecoder().decode(MessageData.self, from: jsonData)
                             
                             let parsedHourData = self.dataHandler.extractHourData(from: messageData.message)
-                            let parsedLocationData = self.dataHandler.extractLocationData(from: messageData.message)
                             let parsedMiscData = self.dataHandler.extractMiscData(from: messageData.message)
                             
+                            let locationString = messageData.message.components(separatedBy: "|")
+                            
                             DispatchQueue.main.async {
+                                
+                                if let parsedLocationData = self.dataHandler.parseLocationString(locationString[1]) {
+                                    self.locationData = parsedLocationData
+                                } else {
+                                    self.locationData = CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
+                                }
+                                
                                 self.hourData = parsedHourData
-                                self.locationData = parsedLocationData
                                 self.gpsData = parsedMiscData
                             }
+                            
                         } catch {
                             print("Error decoding JSON data: \(error)")
                         }
