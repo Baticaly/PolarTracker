@@ -10,13 +10,19 @@ import CoreBluetooth
 import MapKit
 
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+    @Published var connectedPeripheralName: String?
     @Published var characteristicValue = "No data"
     @Published var discoveredPeripherals: [CBPeripheral] = []
     @Published var isConnected = false
     
-    @Published var hourData = "N/A"
-    @Published var gpsData = "N/A"
     @Published var locationData = CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
+    @Published var timeData = "N/A"
+    @Published var altitudeData: Double = 0.0
+    @Published var speedData: Double = 0.0
+    @Published var satellitesData: Int = 0
+    @Published var environmentData: (Double, Double, Double, Double, Double, Double)?
+    @Published var healthData: (Int, Int, Int)?
+
     
     private var centralManager: CBCentralManager!
     private var peripheral: CBPeripheral?
@@ -58,6 +64,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        self.connectedPeripheralName = peripheral.name
         print("Connected to peripheral: \(peripheral)")
         isConnected = true
         peripheral.discoverServices(nil)
@@ -102,22 +109,21 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                     if let jsonData = value.data(using: .utf8) {
                         do {
                             let messageData = try JSONDecoder().decode(MessageData.self, from: jsonData)
-                            
-                            let parsedHourData = self.dataHandler.extractHourData(from: messageData.message)
-                            let parsedMiscData = self.dataHandler.extractMiscData(from: messageData.message)
-                            
                             let locationString = messageData.message.components(separatedBy: "|")
-                            
+
                             DispatchQueue.main.async {
-                                
                                 if let parsedLocationData = self.dataHandler.parseLocationString(locationString[1]) {
                                     self.locationData = parsedLocationData
-                                } else {
-                                    self.locationData = CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
                                 }
                                 
-                                self.hourData = parsedHourData
-                                self.gpsData = parsedMiscData
+                                self.timeData = self.dataHandler.extractTime(from: messageData.message)
+                                if let (altitude, speed, satellites) = self.dataHandler.extractAltitudeSpeedSatellites(from: messageData.message) {
+                                    self.altitudeData = altitude
+                                    self.speedData = speed
+                                    self.satellitesData = satellites
+                                }
+                                self.environmentData = self.dataHandler.extractEnvironmentData(from: messageData.message)
+                                self.healthData = self.dataHandler.extractHealthData(from: messageData.message)
                             }
                             
                         } catch {

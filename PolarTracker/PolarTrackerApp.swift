@@ -8,10 +8,13 @@
 import SwiftUI
 
 @main
-struct BluetoothReaderApp: App {
+struct PolarTrackerApp: App {
+    @StateObject var bleManager = BLEManager()
+
     var body: some Scene {
         WindowGroup {
-            MainMapView()
+            MainMenuView()
+                .environmentObject(bleManager)
         }
     }
 }
