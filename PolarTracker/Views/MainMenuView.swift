@@ -16,11 +16,14 @@ struct MainMenuView: View {
                 NavigationLink(destination: ConnectDeviceView()) {
                     Text("Connect a Device")
                 }
-                NavigationLink(destination: ShowLocationView()) {
+                NavigationLink(destination: ShowLocationView(sessions: bleManager.sessionHandler.sessions)) {
                     Text("Show Location")
                 }
                 NavigationLink(destination: ShowDetailsView()) {
                     Text("Show Details")
+                }
+                NavigationLink(destination: SessionListView().environmentObject(bleManager)) {
+                    Text("Show Saved Sessions")
                 }
             }
             .navigationBarTitle("Main Menu")

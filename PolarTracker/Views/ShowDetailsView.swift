@@ -10,44 +10,109 @@ import MapKit
 
 struct ShowDetailsView: View {
     @EnvironmentObject var bleManager: BLEManager
-    @State private var lockRegionToLocationData = false // Track lock button state
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 39.0, longitude: 34.0),
-        span: MKCoordinateSpan(latitudeDelta: 10, longitudeDelta: 10)
-    )
-    
+
     var body: some View {
-        VStack {
-            Text("Connection Status: \(bleManager.isConnected ? "Connected" : "Disconnected")")
-                .font(.title3)
-            
-            VStack{
-                Text("Time: \(bleManager.timeData)").font(.title3)
-                Text("Latitude: \(bleManager.locationData.latitude)").font(.title3)
-                Text("Longitude: \(bleManager.locationData.longitude)").font(.title3)
-                Text("Altitude: \(bleManager.altitudeData)").font(.title3)
-                Text("Speed: \(bleManager.speedData)").font(.title3)
-                Text("Satellites: \(bleManager.satellitesData)").font(.title3)
-                if let (temperature, humidity, externalTemperature, externalHumidity, pressure, approxAltitude) = bleManager.environmentData {
-                    Text("Temperature: \(temperature)").font(.title3)
-                    Text("Humidity: \(humidity)").font(.title3)
-                    Text("External Temperature: \(externalTemperature)").font(.title3)
-                    Text("External Humidity: \(externalHumidity)").font(.title3)
-                    Text("Pressure: \(pressure)").font(.title3)
-                    Text("Approx Altitude: \(approxAltitude)").font(.title3)
-                }
-                if let (heartrateValueLast, fallDetected, buttonPressed) = bleManager.healthData {
-                    Text("Last Heart Rate Value: \(heartrateValueLast)").font(.title3)
-                    Text("Fall Detected: \(fallDetected)").font(.title3)
-                    Text("Button Pressed: \(buttonPressed)").font(.title3)
-                }
+        ScrollView {
+            VStack {
+                ConnectionStatusCard(bleManager: bleManager)
+                LocationDataCard(bleManager: bleManager)
+                EnvironmentDataCard(bleManager: bleManager)
+                HealthDataCard(bleManager: bleManager)
             }
-            
-            // Text indicating GPS Lock status
-            Text("GPS Clock: \(bleManager.timeData)")
-                .font(.title.bold())
-                .padding()
+            .frame(maxWidth: .infinity) // Make the VStack fill the available width
+            .padding()
         }
+        .frame(maxWidth: .infinity) // Make the VStack fill the available width
         .navigationBarTitle("Show Details")
+    }
+}
+
+struct ConnectionStatusCard: View {
+    @ObservedObject var bleManager: BLEManager
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Connection Status")
+                .font(.headline)
+            Text(bleManager.isConnected ? "Connected" : "Disconnected")
+                .font(.title3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading) // Align text to the left
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
+    }
+}
+
+struct LocationDataCard: View {
+    @ObservedObject var bleManager: BLEManager
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Location Data")
+                .font(.headline)
+            Text("Latitude: \(bleManager.locationData.latitude)")
+                .font(.title3)
+            Text("Longitude: \(bleManager.locationData.longitude)")
+                .font(.title3)
+            Text("Altitude: \(bleManager.altitudeData)")
+                .font(.title3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading) // Align text to the left
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
+    }
+}
+
+struct EnvironmentDataCard: View {
+    @ObservedObject var bleManager: BLEManager
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Environment Data")
+                .font(.headline)
+            if let environmentData = bleManager.environmentData {
+                Text("Temperature: \(String(format: "%.2f", environmentData.temperature))°C")
+                    .font(.title3)
+                Text("Humidity: \(String(format: "%.2f", environmentData.humidity))%")
+                    .font(.title3)
+                Text("External Temperature: \(String(format: "%.2f", environmentData.externalTemperature))°C")
+                    .font(.title3)
+                Text("External Humidity: \(String(format: "%.2f", environmentData.externalHumidity))%")
+                    .font(.title3)
+                Text("Pressure: \(String(format: "%.2f", environmentData.pressure))")
+                    .font(.title3)
+                Text("Approx Altitude: \(String(format: "%.2f", environmentData.approxAltitude))")
+                    .font(.title3)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading) // Align text to the left
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
+    }
+}
+
+struct HealthDataCard: View {
+    @ObservedObject var bleManager: BLEManager
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Health Data")
+                .font(.headline)
+            if let healthData = bleManager.healthData {
+            Text("Last Heart Rate Value: \(healthData.heartrateValueLast)")
+                .font(.title3)
+            Text("Fall Detected: \(healthData.fallDetected)")
+                .font(.title3)
+            Text("Button Pressed: \(healthData.buttonPressed)")
+                .font(.title3)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading) // Align text to the left
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
     }
 }

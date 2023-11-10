@@ -14,6 +14,8 @@
 		536B969C2AFEB75F00C734EC /* ShowLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536B969B2AFEB75F00C734EC /* ShowLocationView.swift */; };
 		536B969E2AFEB77200C734EC /* ShowDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536B969D2AFEB77200C734EC /* ShowDetailsView.swift */; };
 		536B96A02AFEB78300C734EC /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536B969F2AFEB78300C734EC /* MainMenuView.swift */; };
+		536B96A32AFED54300C734EC /* SessionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536B96A22AFED54300C734EC /* SessionHandler.swift */; };
+		536B96A52AFED77500C734EC /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536B96A42AFED77500C734EC /* SessionListView.swift */; };
 		539E04C72AB2AC920081B0F0 /* DataHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539E04C62AB2AC920081B0F0 /* DataHandling.swift */; };
 		539E04C92AB2ACF40081B0F0 /* BLEHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539E04C82AB2ACF40081B0F0 /* BLEHandler.swift */; };
 /* End PBXBuildFile section */
@@ -27,6 +29,8 @@
 		536B969B2AFEB75F00C734EC /* ShowLocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowLocationView.swift; sourceTree = "<group>"; };
 		536B969D2AFEB77200C734EC /* ShowDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowDetailsView.swift; sourceTree = "<group>"; };
 		536B969F2AFEB78300C734EC /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
+		536B96A22AFED54300C734EC /* SessionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHandler.swift; sourceTree = "<group>"; };
+		536B96A42AFED77500C734EC /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
 		539E04C62AB2AC920081B0F0 /* DataHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataHandling.swift; sourceTree = "<group>"; };
 		539E04C82AB2ACF40081B0F0 /* BLEHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEHandler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -85,6 +89,7 @@
 				536B969B2AFEB75F00C734EC /* ShowLocationView.swift */,
 				536B969D2AFEB77200C734EC /* ShowDetailsView.swift */,
 				536B969F2AFEB78300C734EC /* MainMenuView.swift */,
+				536B96A42AFED77500C734EC /* SessionListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -94,6 +99,7 @@
 			children = (
 				539E04C82AB2ACF40081B0F0 /* BLEHandler.swift */,
 				539E04C62AB2AC920081B0F0 /* DataHandling.swift */,
+				536B96A22AFED54300C734EC /* SessionHandler.swift */,
 			);
 			path = Handlers;
 			sourceTree = "<group>";
@@ -169,11 +175,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				536B969E2AFEB77200C734EC /* ShowDetailsView.swift in Sources */,
+				536B96A32AFED54300C734EC /* SessionHandler.swift in Sources */,
 				539E04C92AB2ACF40081B0F0 /* BLEHandler.swift in Sources */,
 				536B96A02AFEB78300C734EC /* MainMenuView.swift in Sources */,
 				539E04C72AB2AC920081B0F0 /* DataHandling.swift in Sources */,
 				536B969C2AFEB75F00C734EC /* ShowLocationView.swift in Sources */,
 				536B969A2AFEB74200C734EC /* ConnectDeviceView.swift in Sources */,
+				536B96A52AFED77500C734EC /* SessionListView.swift in Sources */,
 				533D6C742AB2838600BC7D00 /* PolarTrackerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

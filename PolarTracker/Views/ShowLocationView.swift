@@ -12,11 +12,21 @@ struct ShowLocationView: View {
     @EnvironmentObject var bleManager: BLEManager
     @State private var annotations: [MKPointAnnotation] = []
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    var sessions: [BLESession]
 
     var body: some View {
         ZStack {
             MapView(annotations: $annotations)
                 .ignoresSafeArea(.all) // Make the map full screen
+                .onAppear {
+                    annotations = sessions.flatMap { session in
+                        session.packets.map { packet in
+                            let annotation = MKPointAnnotation()
+                            annotation.coordinate = packet.location.clLocationCoordinate2D
+                            return annotation
+                        }
+                    }
+                }
             
             VStack {
                 HStack {

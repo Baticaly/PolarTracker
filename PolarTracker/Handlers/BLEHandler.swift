@@ -20,13 +20,13 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var altitudeData: Double = 0.0
     @Published var speedData: Double = 0.0
     @Published var satellitesData: Int = 0
-    @Published var environmentData: (Double, Double, Double, Double, Double, Double)?
-    @Published var healthData: (Int, Int, Int)?
+    @Published var environmentData: EnvironmentData?
+    @Published var healthData: HealthData?
 
-    
     private var centralManager: CBCentralManager!
     private var peripheral: CBPeripheral?
     
+    var sessionHandler = SessionHandler()
     let dataHandler = DataHandling()
     
     override init() {
@@ -38,6 +38,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         discoveredPeripherals.removeAll()
         let serviceUUID = CBUUID(string: "ab0828b1-198e-4351-b779-901fa0e0371e")
         centralManager.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        sessionHandler.startSession()
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -74,6 +75,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         print("Disconnected from peripheral: \(peripheral)")
         isConnected = false
         centralManager.scanForPeripherals(withServices: nil, options: nil)
+        sessionHandler.endSession()
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
@@ -110,28 +112,34 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                         do {
                             let messageData = try JSONDecoder().decode(MessageData.self, from: jsonData)
                             let locationString = messageData.message.components(separatedBy: "|")
-
+                            
                             DispatchQueue.main.async {
                                 if let parsedLocationData = self.dataHandler.parseLocationString(locationString[1]) {
                                     self.locationData = parsedLocationData
+                                    self.timeData = self.dataHandler.extractTime(from: messageData.message)
+                                    if let (altitude, speed, satellites) = self.dataHandler.extractAltitudeSpeedSatellites(from: messageData.message) {
+                                        self.altitudeData = altitude
+                                        self.speedData = speed
+                                        self.satellitesData = satellites
+                                        if let (temp, humidity, extTemp, extHumidity, pressure, approxAltitude) = self.dataHandler.extractEnvironmentData(from: messageData.message) {
+                                            let environmentData = EnvironmentData(temperature: temp, humidity: humidity, externalTemperature: extTemp, externalHumidity: extHumidity, pressure: pressure, approxAltitude: approxAltitude)
+                                            self.environmentData = environmentData
+                                            if let (heartrateValueLast, fallDetected, buttonPressed) = self.dataHandler.extractHealthData(from: messageData.message) {
+                                                let healthData = HealthData(heartrateValueLast: heartrateValueLast, fallDetected: fallDetected, buttonPressed: buttonPressed)
+                                                self.healthData = healthData
+                                                
+                                                // Create a new packet with all the data and add it to the current session
+                                                self.sessionHandler.addPacketData(parsedLocationData, altitude: altitude, speed: speed, satellites: satellites, environment: environmentData, health: healthData)
+                                            }
+                                        }
+                                    }
                                 }
-                                
-                                self.timeData = self.dataHandler.extractTime(from: messageData.message)
-                                if let (altitude, speed, satellites) = self.dataHandler.extractAltitudeSpeedSatellites(from: messageData.message) {
-                                    self.altitudeData = altitude
-                                    self.speedData = speed
-                                    self.satellitesData = satellites
-                                }
-                                self.environmentData = self.dataHandler.extractEnvironmentData(from: messageData.message)
-                                self.healthData = self.dataHandler.extractHealthData(from: messageData.message)
                             }
                             
                         } catch {
                             print("Error decoding JSON data: \(error)")
                         }
                     }
-                    
-                    
                 }
             }
         }

@@ -21,7 +21,7 @@ struct MessageData: Codable {
 class DataHandling: ObservableObject {
     
     func parseAndProcessValue(_ value: String) {
-        print("Received value from BLE: \(value)")
+        // print("Received value from BLE: \(value)")
         // {"sender":1, "recipient":255, "message":"19:42:58 | 0.000000,0.000000 | 0.00,0.00,0 | 19.45,74.55,19.12,72.39,1005.47,65.08 | 0,0,0", "SNR":9.75, "RSSI":-33, "FreqErr":662}
 
         if let jsonData = value.data(using: .utf8) {
@@ -45,19 +45,19 @@ class DataHandling: ObservableObject {
     }
     
     func parseLocationString(_ locationString: String) -> CLLocationCoordinate2D? {
-        // Split the locationString by comma to get latitude and longitude strings
         let components = locationString.components(separatedBy: ",")
         
-        // Trim whitespace characters from latitude and longitude components
+        guard components.count >= 2 else {
+            return nil
+        }
+        
         let trimmedLatitude = components[0].trimmingCharacters(in: .whitespaces)
         let trimmedLongitude = components[1].trimmingCharacters(in: .whitespaces)
         
-        // Attempt to convert trimmed latitude and longitude components to Double
         guard let latitude = Double(trimmedLatitude), let longitude = Double(trimmedLongitude) else {
             return nil
         }
         
-        // Create a CLLocationCoordinate2D instance
         let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         
         return coordinate
@@ -65,16 +65,21 @@ class DataHandling: ObservableObject {
 
     func extractAltitudeSpeedSatellites(from message: String) -> (Double, Double, Int)? {
         let components = message.components(separatedBy: " | ")
-        if components.count > 2 {
-            let subComponents = components[2].components(separatedBy: ",")
-            if subComponents.count == 3,
-            let altitude = Double(subComponents[0]),
-            let speed = Double(subComponents[1]),
-            let satellites = Int(subComponents[2]) {
-                return (altitude, speed, satellites)
-            }
+        
+        guard components.count > 2 else {
+            return nil
         }
-        return nil
+        
+        let subComponents = components[2].components(separatedBy: ",")
+        
+        guard subComponents.count >= 3,
+        let altitude = Double(subComponents[0]),
+        let speed = Double(subComponents[1]),
+        let satellites = Int(subComponents[2]) else {
+            return nil
+        }
+        
+        return (altitude, speed, satellites)
     }
 
     func extractEnvironmentData(from message: String) -> (Double, Double, Double, Double, Double, Double)? {
