@@ -26,7 +26,7 @@ struct MainMenuView: View {
                 }
                 .listRowInsets(EdgeInsets())
                 NavigationLink(destination: SessionListView().environmentObject(bleManager)) {
-                    CardView(imageName: "doc.text.fill", title: "Saved Sessions", description: "Show previously saved sessions.")
+                    CardView(imageName: "chart.xyaxis.line", title: "Saved Sessions", description: "Show previously saved sessions.")
                 }
                 .listRowInsets(EdgeInsets())
             }
