@@ -45,19 +45,52 @@ struct SessionDetailView: View {
     var session: BLESession
 
     var body: some View {
-        List {
-            ForEach(session.packets, id: \.time) { packet in
+        ScrollView {
+            ScrollView(.horizontal, showsIndicators: false) {
                 VStack(alignment: .leading) {
-                    Text(String(describing: packet))
+                    HStack {
+                        Text("Time").frame(width: 70, alignment: .leading)
+                        Divider()
+                        Text("Location").frame(width: 160, alignment: .leading)
+                        Divider()
+                        Text("Temperature").frame(width: 130, alignment: .leading)
+                        Divider()
+                        Text("Humidity %").frame(width: 130, alignment: .leading)
+                        Divider()
+                        Text("Pressure (hPa)").frame(width: 70, alignment: .leading)
+                    }
+                    .font(.headline)
+                    .padding()
+
+                    ForEach(session.packets, id: \.time) { packet in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            PacketRowView(packet: packet)
+                                .padding()
+                        }
+                    }
                 }
-                .font(.system(size: 8, design: .monospaced))
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
             }
         }
         .navigationBarTitle("Session Details", displayMode: .inline)
         .navigationBarItems(trailing: ExportButton(session: session).environmentObject(bleManager))
+    }
+}
+
+struct PacketRowView: View {
+    var packet: Packet
+
+    var body: some View {
+        HStack {
+            Text("\(packet.time)").frame(width: 70, alignment: .leading)
+            Divider()
+            Text("\(packet.location.latitude), \(packet.location.longitude)").frame(width: 160, alignment: .leading)
+            Divider()
+            Text("\(String(format: "%.2f", packet.environment.temperature))°C / \(String(format: "%.2f", packet.environment.externalTemperature))°C").frame(width: 130, alignment: .leading)
+            Divider()
+            Text("\(String(format: "%.2f", packet.environment.humidity))% / \(String(format: "%.2f", packet.environment.externalHumidity))%").frame(width: 130, alignment: .leading)
+            Divider()
+            Text("\(String(format: "%.2f", packet.environment.pressure)) hPa").frame(width: 70, alignment: .leading)
+        }
     }
 }
 

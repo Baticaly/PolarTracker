@@ -81,7 +81,7 @@ struct EnvironmentDataCard: View {
                     .font(.title3)
                 Text("External Humidity: \(String(format: "%.2f", environmentData.externalHumidity))%")
                     .font(.title3)
-                Text("Pressure: \(String(format: "%.2f", environmentData.pressure))")
+                Text("Pressure: \(String(format: "%.2f", environmentData.pressure)) hPa")
                     .font(.title3)
                 Text("Approx Altitude: \(String(format: "%.2f", environmentData.approxAltitude))")
                     .font(.title3)
