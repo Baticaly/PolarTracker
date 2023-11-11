@@ -25,12 +25,21 @@ struct ShowLocationView: View {
             if let lastPacket = allPackets.last {
                 let annotation = MKPointAnnotation()
                 annotation.coordinate = lastPacket.location.clLocationCoordinate2D
+                annotation.title = "Node 01"
+                annotation.subtitle = lastPacket.environment.description
                 annotations = [annotation]
             }
             let coordinates = allPackets.map { $0.location.clLocationCoordinate2D }
             polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
         }
     }
+
+    // Define the date formatter
+    let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d, MMMM 'at' HH:mm"
+        return formatter
+    }()
 
     var body: some View {
         ZStack {
@@ -81,19 +90,31 @@ struct ShowLocationView: View {
                 
                 Spacer()
 
-                Picker("Select Session", selection: $selectedSession) {
-                Text("Live").tag(nil as BLESession?)
-                ForEach(sessions, id: \.self) { session in
-                    Text("\(session.startTime)").tag(session as BLESession?)
+                HStack {
+                    Spacer() // This will push the picker to the right
+                    Picker("Select Session", selection: $selectedSession) {
+                        Text("Live").tag(nil as BLESession?)
+                        ForEach(sessions, id: \.self) { session in
+                            Text(session.startTime, formatter: dateFormatter).tag(session as BLESession?)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(10)
+                    .padding(.horizontal, 10)
+                    .accentColor(.white)
                 }
             }
-            .pickerStyle(MenuPickerStyle())
-            .foregroundColor(.black) // Change the text color to black
-            .background(Color.white.opacity(0.3)) // Add a white background with 0.3 opacity
-            .cornerRadius(10) // Make the corners of the background card rounded
-            .padding(.horizontal, 10) // Add horizontal padding to the Picker
-            .padding(.bottom, 10) // Add bottom padding to the Picker
+
+            VStack {
+                Spacer()
+                HStack {
+                    EnvironmentDataView(bleManager: bleManager)
+                    Spacer()
+                }
+                .padding(.bottom, 25)
             }
+
         }
         .navigationBarHidden(true) // Hide navigation bar
     }
@@ -150,6 +171,29 @@ struct MapView: UIViewRepresentable {
                 return renderer
             }
             return MKOverlayRenderer()
+        }
+    }
+}
+
+struct EnvironmentDataView: View {
+    @ObservedObject var bleManager: BLEManager
+
+    var body: some View {
+        if let environmentData = bleManager.environmentData {
+            VStack(alignment: .leading) {
+                Text("Temperature: \(String(format: "%.2f", environmentData.temperature))°C")
+                Text("External Temperature: \(String(format: "%.2f", environmentData.externalTemperature))°C")
+                Text("Humidity: \(String(format: "%.2f", environmentData.humidity))%")
+                Text("External Humidity: \(String(format: "%.2f", environmentData.externalHumidity))%")
+                Text("ΔT: \(String(format: "%.2f", environmentData.temperature - environmentData.externalTemperature))°C")
+                Text("ΔHumidity: \(String(format: "%.2f", environmentData.humidity - environmentData.externalHumidity))%")
+                Text("Pressure: \(String(format: "%.2f", environmentData.pressure)) hPa")
+            }
+            .font(.footnote)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color.gray.opacity(0.7))
+            .cornerRadius(10)
         }
     }
 }
