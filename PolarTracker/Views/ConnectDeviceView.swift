@@ -31,12 +31,28 @@ struct ConnectDeviceView: View {
                     Text(peripheral.name ?? "Unnamed")
                 }
             }
-            
-            Button("Scan for BLE Devices") {
-                bleManager.startBLEConnection()
+
+            if bleManager.isConnected {
+                Button("Disconnect and Save Session") {
+                    bleManager.disconnectCurrentPeripheral()
+                    bleManager.sessionHandler.endSession()
+                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            } else {
+                Button("Scan for BLE Devices") {
+                    bleManager.startBLEConnection()
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
             }
-            .padding()
+            
+            
         }
-        .navigationBarTitle("Connect a Device")
+        .navigationBarTitle("BLE Devices")
     }
 }

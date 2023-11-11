@@ -56,6 +56,11 @@ struct ShowLocationView: View {
                 }
             
             VStack {
+                TopBarView(bleManager: bleManager)
+                Spacer()
+            }
+
+            VStack {
                 HStack {
                     Button(action: {
                         self.presentationMode.wrappedValue.dismiss()
@@ -177,6 +182,7 @@ struct MapView: UIViewRepresentable {
 
 struct EnvironmentDataView: View {
     @ObservedObject var bleManager: BLEManager
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         if let environmentData = bleManager.environmentData {
@@ -192,9 +198,42 @@ struct EnvironmentDataView: View {
             .font(.footnote)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(Color.gray.opacity(0.7))
+            .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.1))
             .cornerRadius(10)
+            .accentColor(.white)
         }
+    }
+}
+
+struct TopBarView: View {
+    @ObservedObject var bleManager: BLEManager
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        HStack {
+            VStack {
+                Image(systemName: "waveform.path.ecg")
+                Text("SNR: \(String(format: "%.2f", bleManager.SNRData))")
+            }
+            VStack {
+                Image(systemName: "antenna.radiowaves.left.and.right")
+                Text("RSSI: \(bleManager.RSSIData)")
+            }
+            VStack {
+                Image(systemName: "waveform")
+                Text("FreqErr: \(bleManager.FreqErrData)")
+            }
+            VStack {
+                Image(systemName: "antenna.radiowaves.left.and.right.circle.fill")
+                Text("Satellites: \(bleManager.satellitesData)")
+            }
+        }
+        .font(.footnote)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(colorScheme == .dark ? Color.black.opacity(0.1) : Color.black.opacity(0.1))
+        .cornerRadius(10)
+        .accentColor(.white)
     }
 }
 

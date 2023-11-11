@@ -136,6 +136,16 @@ class SessionHandler: ObservableObject {
         return formatter.string(from: Date())
     }
 
+    func fileSize(of session: BLESession) -> String {
+        if let data = exportSession(session) {
+            let byteCount = data.count
+            // Convert to Kilobytes
+            let kilobytes = Double(byteCount) / 1024.0
+            return String(format: "%.2f KB", kilobytes)
+        }
+        return "Unknown size"
+    }
+
     @objc func appWillResignActive() {
         endSession()
     }

@@ -23,6 +23,10 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var environmentData: EnvironmentData?
     @Published var healthData: HealthData?
 
+    @Published var SNRData: Double = 0.0
+    @Published var RSSIData: Int = 0
+    @Published var FreqErrData: Int = 0
+
     private var centralManager: CBCentralManager!
     private var peripheral: CBPeripheral?
     
@@ -62,6 +66,12 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         self.peripheral = peripheral
         peripheral.delegate = self
         centralManager.connect(peripheral, options: nil)
+    }
+
+    func disconnectCurrentPeripheral() {
+        if let peripheral = self.peripheral {
+            centralManager.cancelPeripheralConnection(peripheral)
+        }
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -112,6 +122,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                         do {
                             let messageData = try JSONDecoder().decode(MessageData.self, from: jsonData)
                             let locationString = messageData.message.components(separatedBy: "|")
+                            self.SNRData = messageData.SNR
+                            self.RSSIData = messageData.RSSI
+                            self.FreqErrData = messageData.FreqErr
                             
                             DispatchQueue.main.async {
                                 if let parsedLocationData = self.dataHandler.parseLocationString(locationString[1]) {

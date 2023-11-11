@@ -9,16 +9,24 @@ import SwiftUI
 
 struct SessionListView: View {
     @EnvironmentObject var bleManager: BLEManager
+    let formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter
+    }()
 
     var body: some View {
         List {
             ForEach(bleManager.sessionHandler.sessions, id: \.startTime) { session in
                 NavigationLink(destination: SessionDetailView(session: session)) {
                     VStack(alignment: .leading) {
-                        Text("Session started at \(session.startTime)")
-                        Text("Session ended at \(session.endTime ?? Date())")
-                        ExportButton(session: session)
-                            .environmentObject(bleManager)
+                        let formattedStartTime = formatter.string(from: session.startTime)
+                        let formattedEndTime = formatter.string(from: session.endTime ?? Date())
+                        let fileSize = bleManager.sessionHandler.fileSize(of: session)
+                        Text("Session started at \(formattedStartTime)")
+                        Text("Session ended at \(formattedEndTime)")
+                        Text("Size: \(fileSize)")
                     }
                 }
             }
@@ -33,27 +41,23 @@ struct SessionListView: View {
 }
 
 struct SessionDetailView: View {
+    @EnvironmentObject var bleManager: BLEManager
     var session: BLESession
 
     var body: some View {
         List {
             ForEach(session.packets, id: \.time) { packet in
                 VStack(alignment: .leading) {
-                    Text("Time: \(packet.time)")
-                    Text("Latitude: \(String(format: "%.2f", packet.location.latitude)), Longitude: \(String(format: "%.2f", packet.location.longitude))")
-                    Text("Altitude: \(String(format: "%.2f", packet.altitude))")
-                    Text("Speed: \(String(format: "%.2f", packet.speed))")
-                    Text("Satellites: \(packet.satellites)")
-                    Text("Environment Data: \(packet.environment.description)")
-                    Text("Health Data: \(packet.health.description)")
+                    Text(String(describing: packet))
                 }
+                .font(.system(size: 8, design: .monospaced))
                 .padding()
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(10)
-                .padding(.bottom, 10)
             }
         }
         .navigationBarTitle("Session Details", displayMode: .inline)
+        .navigationBarItems(trailing: ExportButton(session: session).environmentObject(bleManager))
     }
 }
 
@@ -75,7 +79,7 @@ struct ExportButton: View {
                 }
             }
         }) {
-            Text("Export Session")
+            Image(systemName: "square.and.arrow.up") // System symbol for 'Share'
         }
     }
 }
