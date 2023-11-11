@@ -67,11 +67,11 @@ struct ExportButton: View {
 
     var body: some View {
         Button(action: {
-            if let data = bleManager.sessionHandler.exportSession(session) {
-                let filename = "session.json"
+            if let csvString = bleManager.sessionHandler.exportSessionAsCSV(session) {
+                let filename = "session.csv"
                 let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
                 do {
-                    try data.write(to: tmpURL)
+                    try csvString.write(to: tmpURL, atomically: true, encoding: .utf8)
                     let documentPicker = UIDocumentPickerViewController(forExporting: [tmpURL])
                     UIApplication.shared.windows.first?.rootViewController?.present(documentPicker, animated: true)
                 } catch {
