@@ -17,13 +17,18 @@ struct SessionListView: View {
                     VStack(alignment: .leading) {
                         Text("Session started at \(session.startTime)")
                         Text("Session ended at \(session.endTime ?? Date())")
+                        ExportButton(session: session)
+                            .environmentObject(bleManager)
                     }
                 }
-                ExportButton(session: session)
-                    .environmentObject(bleManager)
             }
+            .onDelete(perform: deleteSession)
         }
         .navigationBarTitle("Saved Sessions")
+    }
+
+    private func deleteSession(at offsets: IndexSet) {
+        bleManager.sessionHandler.sessions.remove(atOffsets: offsets)
     }
 }
 

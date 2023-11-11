@@ -56,11 +56,15 @@ struct BLESession: Codable {
     let startTime: Date
     var endTime: Date?
     var packets: [Packet]
+
+    var path: [CLLocationCoordinate2D] {
+        return packets.map { $0.location.clLocationCoordinate2D }
+    }
 }
 
 class SessionHandler: ObservableObject {
     @Published var sessions: [BLESession] = []
-    private var currentSession: BLESession?
+    @Published var currentSession: BLESession?
 
     init() {
         loadSessionsFromFile()
