@@ -132,6 +132,7 @@ class SessionHandler: ObservableObject {
 
     func exportSessionAsCSV(_ session: BLESession) -> String? {
         var csvString = "time,latitude,longitude,altitude,speed,satellites,temperature,humidity,externalTemperature,externalHumidity,pressure,approxAltitude,heartrateValueLast,fallDetected,buttonPressed\n"
+
         for packet in session.packets {
             let line = "\(packet.time),\(packet.location.latitude),\(packet.location.longitude),\(packet.altitude),\(packet.speed),\(packet.satellites),\(packet.environment.temperature),\(packet.environment.humidity),\(packet.environment.externalTemperature),\(packet.environment.externalHumidity),\(packet.environment.pressure),\(packet.environment.approxAltitude),\(packet.health.heartrateValueLast),\(packet.health.fallDetected),\(packet.health.buttonPressed)\n"
             csvString += line
@@ -141,7 +142,8 @@ class SessionHandler: ObservableObject {
 
     func getCurrentTime() -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        formatter.timeZone = TimeZone.current
         return formatter.string(from: Date())
     }
 
