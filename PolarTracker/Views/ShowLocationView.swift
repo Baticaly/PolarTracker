@@ -16,6 +16,7 @@ struct ShowLocationView: View {
     @State private var selectedSession: BLESession?
     @State private var shouldZoomIn = false
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.scenePhase) private var scenePhase
     var sessions: [BLESession]
 
     private func updateMapViewForSession() {
@@ -53,6 +54,11 @@ struct ShowLocationView: View {
                 }
                 .onChange(of: selectedSession) { _ in
                     updateMapViewForSession()
+                }
+                .onChange(of: scenePhase) { newScenePhase in
+                    if newScenePhase == .active {
+                        updateMapViewForSession()
+                    }
                 }
             
             VStack {
