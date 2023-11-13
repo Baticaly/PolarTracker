@@ -62,7 +62,7 @@ struct SessionDetailView: View {
                     .font(.headline)
                     .padding()
 
-                    ForEach(session.packets, id: \.time) { packet in
+                    ForEach(Array(session.packets.prefix(100).enumerated()), id: \.offset) { index, packet in
                         ScrollView(.horizontal, showsIndicators: false) {
                             PacketRowView(packet: packet)
                                 .padding()
