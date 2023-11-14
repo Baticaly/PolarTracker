@@ -63,26 +63,44 @@ struct BLESession: Codable {
 }
 
 class SessionHandler: ObservableObject {
-    @Published var sessions: [BLESession] = []
     @Published var currentSession: BLESession?
+
+    var sessions = [BLESession]() {
+        didSet {
+            saveSessionsToFile()
+        }
+    }
 
     init() {
         loadSessionsFromFile()
-        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+    }
+
+    func saveSessionsToFile() {
+        let encoder = JSONEncoder()
+        if let encoded = try? encoder.encode(sessions) {
+            let url = getDocumentsDirectory().appendingPathComponent("sessions.json")
+            try? encoded.write(to: url)
+        }
+    }
+
+    func loadSessionsFromFile() {
+        let url = getDocumentsDirectory().appendingPathComponent("sessions.json")
+        if let data = try? Data(contentsOf: url) {
+            let decoder = JSONDecoder()
+            if let loadedSessions = try? decoder.decode([BLESession].self, from: data) {
+                self.sessions = loadedSessions
+            }
+        }
+    }
+
+    func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
     }
 
     func startSession() {
-        currentSession = BLESession(startTime: Date(), endTime: nil, packets: [])
-    }
-
-    func endSession() {
-        currentSession?.endTime = Date()
-        if let session = currentSession {
-            sessions.append(session)
-        }
-        currentSession = nil
-
-        saveSessionsToFile()
+        currentSession = BLESession(startTime: Date(), packets: [])
     }
 
     func addPacketData(_ locationData: CLLocationCoordinate2D, altitude: Double, speed: Double, satellites: Int, environment: EnvironmentData, health: HealthData) {
@@ -91,53 +109,12 @@ class SessionHandler: ObservableObject {
         currentSession?.packets.append(packet)
     }
 
-    func saveSessionsToFile() {
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileURL = documentsDirectory.appendingPathComponent("sessions.json")
-
-        do {
-            let data = try JSONEncoder().encode(sessions)
-            try data.write(to: fileURL)
-        } catch {
-            print("Error saving sessions: \(error)")
+    func endSession() {
+        currentSession?.endTime = Date()
+        if let currentSession = currentSession {
+            sessions.append(currentSession)
         }
-    }
-
-    func loadSessionsFromFile() {
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileURL = documentsDirectory.appendingPathComponent("sessions.json")
-
-        do {
-            let data = try Data(contentsOf: fileURL)
-            sessions = try JSONDecoder().decode([BLESession].self, from: data)
-        } catch {
-            print("Error loading sessions: \(error)")
-            if (error as NSError).domain == NSCocoaErrorDomain && (error as NSError).code == NSFileReadNoSuchFileError {
-                print("No previous sessions found")
-            }
-        }
-    }
-
-    func exportSession(_ session: BLESession) -> Data? {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        do {
-            let data = try encoder.encode(session)
-            return data
-        } catch {
-            print("Error encoding session: \(error)")
-            return nil
-        }
-    }
-
-    func exportSessionAsCSV(_ session: BLESession) -> String? {
-        var csvString = "time,latitude,longitude,altitude,speed,satellites,temperature,humidity,externalTemperature,externalHumidity,pressure,approxAltitude,heartrateValueLast,fallDetected,buttonPressed\n"
-
-        for packet in session.packets {
-            let line = "\(packet.time),\(packet.location.latitude),\(packet.location.longitude),\(packet.altitude),\(packet.speed),\(packet.satellites),\(packet.environment.temperature),\(packet.environment.humidity),\(packet.environment.externalTemperature),\(packet.environment.externalHumidity),\(packet.environment.pressure),\(packet.environment.approxAltitude),\(packet.health.heartrateValueLast),\(packet.health.fallDetected),\(packet.health.buttonPressed)\n"
-            csvString += line
-        }
-        return csvString
+        currentSession = nil
     }
 
     func getCurrentTime() -> String {
@@ -148,17 +125,42 @@ class SessionHandler: ObservableObject {
     }
 
     func fileSize(of session: BLESession) -> String {
-        if let data = exportSession(session) {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(session) {
             let byteCount = data.count
-            // Convert to Kilobytes
-            let kilobytes = Double(byteCount) / 1024.0
-            return String(format: "%.2f KB", kilobytes)
+            // bytes
+            if byteCount < 1023 {
+                return "\(byteCount) B"
+            }
+            // kilobytes
+            let kiloByteCount = Double(byteCount) / 1024.0
+            if kiloByteCount < 1023 {
+                return String(format: "%.2f KB", kiloByteCount)
+            }
+            // megabytes
+            let megaByteCount = kiloByteCount / 1024.0
+            return String(format: "%.2f MB", megaByteCount)
+        } else {
+            return "Calculating..."
         }
-        return "Unknown size"
+    }
+
+    func exportSessionAsCSV(_ session: BLESession) -> String? {
+        var csvString = "Time,Latitude,Longitude,Altitude,Speed,Satellites,Temperature,Humidity,External Temperature,External Humidity,Pressure,Approx Altitude,Heart Rate,Fall Detected,Button Pressed\n"
+        for packet in session.packets {
+            let line = "\(packet.time),\(packet.location.latitude), \(packet.location.longitude),\(packet.altitude),\(packet.speed),\(packet.satellites),\(packet.environment.temperature),\(packet.environment.humidity),\(packet.environment.externalTemperature),\(packet.environment.externalHumidity),\(packet.environment.pressure),\(packet.environment.approxAltitude),\(packet.health.heartrateValueLast),\(packet.health.fallDetected),\(packet.health.buttonPressed)\n"
+            csvString += line
+        }
+        return csvString
     }
 
     @objc func appWillResignActive() {
         endSession()
+    }
+
+    @objc func appDidEnterBackground() {
+        endSession()
+        saveSessionsToFile()
     }
 }
 

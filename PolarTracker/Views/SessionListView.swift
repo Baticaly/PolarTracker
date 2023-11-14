@@ -49,9 +49,9 @@ struct SessionDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("Time").frame(width: 180, alignment: .leading)
+                        Text("Time").frame(width: 170, alignment: .leading)
                         Divider()
-                        Text("Location").frame(width: 160, alignment: .leading)
+                        Text("Location").frame(width: 180, alignment: .leading)
                         Divider()
                         Text("Temperature").frame(width: 150, alignment: .leading)
                         Divider()
@@ -81,9 +81,9 @@ struct PacketRowView: View {
 
     var body: some View {
         HStack {
-            Text("\(packet.time)").frame(width: 180, alignment: .leading)
+            Text("\(packet.time)").frame(width: 170, alignment: .leading)
             Divider()
-            Text("\(packet.location.latitude), \(packet.location.longitude)").frame(width: 160, alignment: .leading)
+            Text("\(packet.location.latitude), \(packet.location.longitude)").frame(width: 180, alignment: .leading)
             Divider()
             Text("\(String(format: "%.2f", packet.environment.temperature))°C / \(String(format: "%.2f", packet.environment.externalTemperature))°C").frame(width: 150, alignment: .leading)
             Divider()
