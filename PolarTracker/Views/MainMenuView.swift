@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainMenuView: View {
     @EnvironmentObject var bleManager: BLEManager
+    @StateObject var mapViewModel = MapViewModel()
 
     var body: some View {
         NavigationView {
@@ -17,7 +18,7 @@ struct MainMenuView: View {
                     CardView(imageName: "rectangle.connected.to.line.below", title: "Connect", description: "Connect to a BLE device.")
                 }
                 .listRowInsets(EdgeInsets())
-                NavigationLink(destination: ShowLocationView(sessions: bleManager.sessionHandler.sessions)) {
+                NavigationLink(destination: ShowLocationView(sessions: bleManager.sessionHandler.sessions, mapViewModel: mapViewModel)) {
                     CardView(imageName: "map.fill", title: "Map", description: "Show the current location.")
                 }
                 .listRowInsets(EdgeInsets())

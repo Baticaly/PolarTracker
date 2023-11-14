@@ -8,17 +8,22 @@
 import SwiftUI
 import MapKit
 
+class MapViewModel: ObservableObject {
+    @Published var annotations: [MKPointAnnotation] = []
+    @Published var polyline: MKPolyline? = nil
+}
+
 struct ShowLocationView: View {
+    var sessions: [BLESession]
+
     @EnvironmentObject var bleManager: BLEManager
-    @State private var annotations: [MKPointAnnotation] = []
-    @State private var polyline: MKPolyline? = nil
+    @ObservedObject var mapViewModel: MapViewModel
     @State private var recentCoordinate: CLLocationCoordinate2D?
     @State private var selectedSession: BLESession?
     @State private var shouldZoomIn = false
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.scenePhase) private var scenePhase
-    var sessions: [BLESession]
-
+    
     private func updateMapViewForSession() {
         let currentSession = selectedSession ?? bleManager.sessionHandler.currentSession
         if let currentSession = currentSession {
@@ -28,10 +33,10 @@ struct ShowLocationView: View {
                 annotation.coordinate = lastPacket.location.clLocationCoordinate2D
                 annotation.title = "Node 01"
                 annotation.subtitle = lastPacket.environment.description
-                annotations = [annotation]
+                mapViewModel.annotations = [annotation]
             }
             let coordinates = allPackets.map { $0.location.clLocationCoordinate2D }
-            polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+            mapViewModel.polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
         }
     }
 
@@ -44,7 +49,7 @@ struct ShowLocationView: View {
 
     var body: some View {
         ZStack {
-            MapView(annotations: $annotations, polyline: $polyline, recentCoordinate: $recentCoordinate, shouldZoomIn: $shouldZoomIn)
+            MapView(annotations: $mapViewModel.annotations, polyline: $mapViewModel.polyline, recentCoordinate: $recentCoordinate, shouldZoomIn: $shouldZoomIn)
                 .ignoresSafeArea(.all) // Make the map full screen
                 .onAppear {
                     updateMapViewForSession()
@@ -84,7 +89,7 @@ struct ShowLocationView: View {
                     Spacer()
 
                     Button(action: {
-                        if let lastPacket = sessions.flatMap({ $0.packets }).last {
+                        if let lastPacket = bleManager.sessionHandler.currentSession?.packets.last {
                             recentCoordinate = lastPacket.location.clLocationCoordinate2D
                             shouldZoomIn = true
                         }
