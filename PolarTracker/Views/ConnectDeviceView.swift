@@ -12,23 +12,15 @@ struct ConnectDeviceView: View {
     
     var body: some View {
         VStack {
-            if bleManager.isConnected {
-                if let connectedPeripheralName = bleManager.connectedPeripheralName {
-                    Text("Connected to: \(connectedPeripheralName)")
-                        .font(.title)
-                        .padding()
-                }
-            } else {
-                Text("Disconnected")
-                    .font(.title)
-                    .padding()
-            }
+            ConnectionStatusCard(bleManager: bleManager)
             
-            List(bleManager.discoveredPeripherals, id: \.self) { peripheral in
-                Button(action: {
-                    bleManager.connect(to: peripheral)
-                }) {
-                    Text(peripheral.name ?? "Unnamed")
+            if !bleManager.isConnected {
+                List(bleManager.discoveredPeripherals, id: \.self) { peripheral in
+                    Button(action: {
+                        bleManager.connect(to: peripheral)
+                    }) {
+                        Text(peripheral.name ?? "Unnamed")
+                    }
                 }
             }
 
@@ -50,8 +42,6 @@ struct ConnectDeviceView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-            
-            
         }
         .navigationBarTitle("BLE Devices")
     }

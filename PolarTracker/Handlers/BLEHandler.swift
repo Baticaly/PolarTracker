@@ -40,8 +40,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     
     func startBLEConnection() {
         discoveredPeripherals.removeAll()
-        let serviceUUID = CBUUID(string: "ab0828b1-198e-4351-b779-901fa0e0371e")
-        centralManager.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        centralManager.scanForPeripherals(withServices: nil, options: nil)
         sessionHandler.startSession()
     }
     

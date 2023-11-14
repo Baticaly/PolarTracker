@@ -31,8 +31,19 @@ struct MainMenuView: View {
                 }
                 .listRowInsets(EdgeInsets())
             }
-            .navigationBarTitle("Polar Tracker")
-            .navigationBarItems(trailing: Text(bleManager.isConnected ? "Connected to: \(bleManager.connectedPeripheralName ?? "Unnamed")" : "Disconnected"))
+            .navigationBarItems(leading: HStack {
+                if bleManager.isConnected {
+                    Image(systemName: "circle.fill")
+                        .foregroundColor(.red)
+                    Text("Recording")
+                }
+            }, trailing: HStack {
+                if bleManager.isConnected {
+                    Text(bleManager.connectedPeripheralName ?? "Unnamed")
+                } else {
+                    Text("Disconnected")
+                }
+            })
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }

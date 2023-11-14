@@ -34,8 +34,17 @@ struct ConnectionStatusCard: View {
         VStack(alignment: .leading) {
             Text("Connection Status")
                 .font(.headline)
-            Text(bleManager.isConnected ? "Connected" : "Disconnected")
-                .font(.title3)
+            HStack {
+                if bleManager.isConnected {
+                    Text("Connected to: \(bleManager.connectedPeripheralName ?? "Unnamed")")
+                        .font(.title3)
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                } else {
+                    Text("Disconnected")
+                        .font(.title3)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading) // Align text to the left
         .padding()
