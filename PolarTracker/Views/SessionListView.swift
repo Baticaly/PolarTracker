@@ -49,15 +49,15 @@ struct SessionDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("Time").frame(width: 70, alignment: .leading)
+                        Text("Time").frame(width: 180, alignment: .leading)
                         Divider()
                         Text("Location").frame(width: 160, alignment: .leading)
                         Divider()
-                        Text("Temperature").frame(width: 130, alignment: .leading)
+                        Text("Temperature").frame(width: 150, alignment: .leading)
                         Divider()
-                        Text("Humidity %").frame(width: 130, alignment: .leading)
+                        Text("Humidity %").frame(width: 150, alignment: .leading)
                         Divider()
-                        Text("Pressure (hPa)").frame(width: 70, alignment: .leading)
+                        Text("Pressure (hPa)").frame(width: 100, alignment: .leading)
                     }
                     .font(.headline)
                     .padding()
@@ -81,15 +81,15 @@ struct PacketRowView: View {
 
     var body: some View {
         HStack {
-            Text("\(packet.time)").frame(width: 70, alignment: .leading)
+            Text("\(packet.time)").frame(width: 180, alignment: .leading)
             Divider()
             Text("\(packet.location.latitude), \(packet.location.longitude)").frame(width: 160, alignment: .leading)
             Divider()
-            Text("\(String(format: "%.2f", packet.environment.temperature))°C / \(String(format: "%.2f", packet.environment.externalTemperature))°C").frame(width: 130, alignment: .leading)
+            Text("\(String(format: "%.2f", packet.environment.temperature))°C / \(String(format: "%.2f", packet.environment.externalTemperature))°C").frame(width: 150, alignment: .leading)
             Divider()
-            Text("\(String(format: "%.2f", packet.environment.humidity))% / \(String(format: "%.2f", packet.environment.externalHumidity))%").frame(width: 130, alignment: .leading)
+            Text("\(String(format: "%.2f", packet.environment.humidity))% / \(String(format: "%.2f", packet.environment.externalHumidity))%").frame(width: 150, alignment: .leading)
             Divider()
-            Text("\(String(format: "%.2f", packet.environment.pressure)) hPa").frame(width: 70, alignment: .leading)
+            Text("\(String(format: "%.2f", packet.environment.pressure)) hPa").frame(width: 100, alignment: .leading)
         }
     }
 }

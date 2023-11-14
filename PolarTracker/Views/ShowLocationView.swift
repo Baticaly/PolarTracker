@@ -7,11 +7,7 @@
 
 import SwiftUI
 import MapKit
-
-class MapViewModel: ObservableObject {
-    @Published var annotations: [MKPointAnnotation] = []
-    @Published var polyline: MKPolyline? = nil
-}
+import CoreLocation
 
 struct ShowLocationView: View {
     var sessions: [BLESession]
@@ -21,19 +17,28 @@ struct ShowLocationView: View {
     @State private var recentCoordinate: CLLocationCoordinate2D?
     @State private var selectedSession: BLESession?
     @State private var shouldZoomIn = false
+    @State private var showCurrentLocation = false
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.scenePhase) private var scenePhase
-    
+    @Environment(\.verticalSizeClass) var verticalSizeClass
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
     private func updateMapViewForSession() {
         let currentSession = selectedSession ?? bleManager.sessionHandler.currentSession
         if let currentSession = currentSession {
             let allPackets = currentSession.packets
             if let lastPacket = allPackets.last {
-                let annotation = MKPointAnnotation()
-                annotation.coordinate = lastPacket.location.clLocationCoordinate2D
-                annotation.title = "Node 01"
-                annotation.subtitle = lastPacket.environment.description
-                mapViewModel.annotations = [annotation]
+                if let node01Annotation = mapViewModel.annotations.first(where: { $0.title == "Node 01" }) {
+                    // Update the coordinate of the existing annotation
+                    node01Annotation.coordinate = lastPacket.location.clLocationCoordinate2D
+                } else {
+                    // Create a new annotation if it doesn't exist
+                    let annotation = MKPointAnnotation()
+                    annotation.coordinate = lastPacket.location.clLocationCoordinate2D
+                    annotation.title = "Node 01"
+                    annotation.subtitle = lastPacket.environment.description
+                    mapViewModel.annotations.append(annotation)
+                }
             }
             let coordinates = allPackets.map { $0.location.clLocationCoordinate2D }
             mapViewModel.polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
@@ -68,10 +73,14 @@ struct ShowLocationView: View {
             
             VStack {
                 TopBarView(bleManager: bleManager)
+                .padding(.top, 10)
                 Spacer()
             }
 
             VStack {
+                if verticalSizeClass == .regular && horizontalSizeClass == .compact {
+                    Spacer().frame(height: 55)
+                }
                 HStack {
                     Button(action: {
                         self.presentationMode.wrappedValue.dismiss()
@@ -88,20 +97,39 @@ struct ShowLocationView: View {
                     
                     Spacer()
 
-                    Button(action: {
-                        if let lastPacket = bleManager.sessionHandler.currentSession?.packets.last {
-                            recentCoordinate = lastPacket.location.clLocationCoordinate2D
-                            shouldZoomIn = true
+                    HStack {
+                        Button(action: {
+                            self.showCurrentLocation.toggle()
+                            if self.showCurrentLocation {
+                                self.mapViewModel.requestLocation()
+                            } else {
+                                self.mapViewModel.hideCurrentLocation()
+                            }
+                        }) {
+                            Image(systemName: self.showCurrentLocation ? "location.fill" : "location")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
                         }
-                    }) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(Circle())
+                        .padding(.top, 10)
+                        .padding(.trailing, 10)
+
+                        Button(action: {
+                            if let lastPacket = bleManager.sessionHandler.currentSession?.packets.last {
+                                recentCoordinate = lastPacket.location.clLocationCoordinate2D
+                                shouldZoomIn = true
+                            }
+                        }) {
+                            Image(systemName: "mappin.and.ellipse")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding(.top, 10)
+                        .padding(.trailing, 10)
                     }
-                    .padding(.top, 10)
-                    .padding(.trailing, 10)
                 }
                 
                 Spacer()
@@ -133,6 +161,28 @@ struct ShowLocationView: View {
 
         }
         .navigationBarHidden(true) // Hide navigation bar
+    }
+}
+
+class MapViewModel: NSObject, ObservableObject {
+    @Published var annotations: [MKPointAnnotation] = []
+    @Published var polyline: MKPolyline? = nil
+    private var locationManager: CLLocationManager?
+
+    override init() {
+        super.init()
+        locationManager = CLLocationManager()
+        locationManager?.delegate = self
+    }
+
+    func requestLocation() {
+        locationManager?.requestWhenInUseAuthorization()
+        locationManager?.startUpdatingLocation()
+    }
+
+    func hideCurrentLocation() {
+        annotations.removeAll { $0.title == "Current Location" }
+        locationManager?.stopUpdatingLocation()
     }
 }
 
@@ -178,7 +228,31 @@ struct MapView: UIViewRepresentable {
         init(_ parent: MapView) {
             self.parent = parent
         }
-        
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            let view = MKAnnotationView(annotation: annotation, reuseIdentifier: nil)
+            view.frame.size = CGSize(width: 20, height: 20)
+            view.layer.cornerRadius = view.frame.size.width / 2
+            view.layer.borderWidth = 0 // Remove the border
+
+            let imageView = UIImageView()
+            imageView.frame = CGRect(x: 2, y: 2, width: 16, height: 16) // Smaller size and offset for padding
+            imageView.contentMode = .scaleAspectFit
+
+            if annotation.title == "Current Location" {
+                imageView.image = UIImage(systemName: "antenna.radiowaves.left.and.right")
+                imageView.tintColor = .black
+                view.layer.backgroundColor = UIColor.white.cgColor
+            } else if annotation.title == "Node 01" {
+                imageView.image = UIImage(systemName: "dot.radiowaves.left.and.right")
+                imageView.tintColor = .white
+                view.layer.backgroundColor = UIColor.orange.cgColor
+            }
+
+            view.addSubview(imageView)
+            return view
+        }
+
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polyline = overlay as? MKPolyline {
                 let renderer = MKPolylineRenderer(polyline: polyline)
@@ -264,5 +338,18 @@ extension BLESession: Hashable {
     func hash(into hasher: inout Hasher) {
         // Include the properties that uniquely identify a BLESession
         hasher.combine(startTime) // replace with your own properties
+    }
+}
+
+extension MapViewModel: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location.coordinate
+        annotation.title = "Current Location"
+        annotations.append(annotation)
+        
+        // Stop updating location after the first update
+        manager.stopUpdatingLocation()
     }
 }
